@@ -3,4 +3,4 @@ Participation for the Codepen board game challenge. A take on scrabble but for s
 
 
 
-Live Demo :- [https://Scrabble-Lite--siddhantkcode.repl.co]url
+Live Demo :- https://Scrabble-Lite--siddhantkcode.repl.co
