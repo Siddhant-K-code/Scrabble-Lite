@@ -1,0 +1,574 @@
+
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Scrabble Lite! | Follow ig_siddhant_khare</title>
+    <link
+  
+      href="https://fonts.googleapis.com/css?family=News+Cycle:400,700&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <h1 class="info">
+      Click to place tile | Click to remove tile | Words not validated |
+    </h1>
+    <h2 id="score-animation">Nice! +3</h2>
+    <header>
+      <h1 id="timer"><span id="timer-num">0 </span>Seconds</h1>
+      <h1 id="score">0</h1>
+    </header>
+    <div id="answer-row"></div>
+    <ul id="tile-row"></ul>
+    <footer>
+      <button id="refresh">Refresh</button>
+      <button id="submit">Submit</button>
+      <button onclick="window.location.href = 'https://www.instagram.com/ig_siddhant_khare';">Follow Me</button>
+    </footer>
+  </body>
+
+  <style>
+/* Vars to help with transition animations*/
+:root {
+  --tx: 0px; /* tx ty are end coordinates for the tile when placed in board*/
+  --ty: 0px;
+  --txs: 0px;
+  --tys: 0px; /* Coordinates for where the animation should start, i.e position of clicked tile*/
+  --scale: 0.7;
+  --deg: 60deg;
+  --persp: 200px;
+}
+@keyframes fade {
+  0% {
+    opacity: 1;
+  }
+  90% {
+    z-index: 1;
+  }
+  100% {
+    opacity: 0;
+    z-index: -1;
+  }
+}
+
+@keyframes setTile {
+  0% {
+    transform: rotateX(var(--deg)) perspective(var(--persp));
+  }
+  50% {
+    perspective: 50px;
+    transform: rotateX(20deg);
+  }
+  100% {
+    transform: translate3d(var(--tx), var(--ty), 0) rotateX(0deg) scale(1);
+    perspective: none;
+    visibility: hidden;
+  }
+}
+
+@keyframes scoreAnimation {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-400px);
+  }
+}
+
+@keyframes removeTile {
+  0% {
+    transform: rotateX(0deg);
+
+    perspective: none;
+  }
+  50% {
+    perspective: 200px;
+    transform: rotateX(20deg);
+  }
+  100% {
+    transform: translate3d(var(--tx), var(--ty), 0) scale(var(--scale))
+      rotateX(var(--deg)) perspective(var(--persp));
+    visibility: hidden;
+  }
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: rgba(0,0,0,0);
+}
+
+body,
+html {
+  width: 100%;
+  height: 100%;
+  font-family: 'News Cycle', sans-serif;
+}
+
+body {
+  background-color: #dda7ab;
+}
+header {
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  width: 100%;
+  height: 15%;
+  justify-content: flex-end;
+  align-items: center;
+  font-size: 0.8em;
+  color: #0e0c0c;
+}
+header #score {
+  flex-basis: 10%;
+  padding: 1%;
+}
+header #timer {
+  flex-grow: 1;
+  padding: 1% 1% 1% 2%;
+}
+header #timer-num {
+  color: #ffffff;
+}
+#score-animation {
+  top: 20%;
+  left: 45%;
+  position: absolute;
+  color: #ffffff;
+  text-transform: capitalize;
+  font-size: 1.5em;
+  opacity: 0;
+}
+.scoredClass {
+  animation: scoreAnimation 2s linear;
+  animation-iteration-count: 1;
+}
+
+.tileHidden {
+  visibility: hidden;
+}
+
+#answer-row {
+  display: flex;
+  flex-direction: row;
+  position: relative;
+  box-shadow: -1em 1em 1em hsl(0, 0%, 31%);
+  justify-content: flex-start;
+  align-content: center;
+  width: 700px;
+  margin: 0 auto;
+  height: 100px;
+  background-color: #f1e4e4;
+  top: 30%;
+}
+
+#answer-row .tile {
+  list-style-type: none;
+  height: 100px;
+  background-image: url('https://i.pinimg.com/originals/34/7b/05/347b05f70e3ec739230bb470bdda89d7.jpg');
+  width: 100px;
+  text-align: center;
+  font-family: 'News Cycle', sans-serif;
+  font-weight: 700;
+  font-size: 2.5em;
+  line-height: 2.5em;
+  /* transition: 0.5s all ease; */
+  transition: 0.5s transform ease;
+  box-shadow: 0px 20px 50px #555;
+  cursor: pointer;
+  transform: rotateX(0deg);
+}
+#answer-row .tile-value {
+  display: inline-block;
+  font-size: 0.5em;
+  text-align: center;
+  padding-left: 1%;
+  transform: translateX(1.3em) translateY(1.6em);
+}
+#answer-row:hover {
+  transition: background-color 0.3s linear;
+  background-color: #fcf4f4;
+}
+#tile-row {
+  display: flex;
+  flex-direction: row;
+  min-width: 50%;
+  position: relative;
+  top: 50%;
+  margin: 0 auto;
+  height: 100px;
+  perspective: 1px;
+  justify-content: space-around;
+  align-content: center;
+  perspective: 500px;
+  width: 700px;
+}
+.tile {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  list-style-type: none;
+  height: 100px;
+  background-image: url('https://i.pinimg.com/originals/34/7b/05/347b05f70e3ec739230bb470bdda89d7.jpg');
+  width: 100px;
+  text-align: center;
+  font-family: 'News Cycle', sans-serif;
+  font-weight: 700;
+  font-size: 2.5em;
+  line-height: 2.5em;
+  /* transition: 0.5s all ease; */
+  transition: 0.5s transform ease;
+  box-shadow: 0px 20px 50px #555;
+  transform: rotateX(60deg) scale(0.7);
+  perspective: 200px;
+  cursor: pointer;
+  max-width: 100px;
+  z-index: 1;
+}
+.tile-value {
+  display: inline-block;
+  font-size: 0.5em;
+  transform: translateX(1.5em) translateY(2em);
+}
+
+#tile-row li:hover {
+  transform: rotateX(0deg) scale(1);
+}
+
+.setTileAnim {
+  animation: setTile 0.5s ease-in-out;
+  z-index:3;
+}
+
+.removeTileAnim {
+  animation: removeTile 0.5s ease-in-out forwards;
+  z-index:3;
+}
+
+footer {
+  display: flex;
+  justify-content: flex-end;
+  padding: 1% 2% 1% 2%;
+  align-items: center;
+  position: relative;
+  bottom: 0;
+  width: 100%;
+  font-size: 1.5em;
+  top: 50%;
+}
+footer button {
+  font-family: 'News Cycle', sans-serif;
+  text-transform: uppercase;
+  padding: 0.5%;
+  width: 10%;
+  min-width: 100px;
+  background-color: #b6aeae;
+  color: rgb(22, 22, 22);
+  margin: 0 2% 0 2%;
+  font-size: 0.8em;
+  border-radius: 5px;
+  box-shadow: 0px 5px 2px #89968f;
+  position: relative;
+  top: 0px;
+  transition: all ease 0.1s;
+}
+footer button:active {
+  box-shadow: 0 3px 0 #89968f;
+  top: 3px;
+}
+
+.info {
+  position: absolute;
+  top: 0;
+  left: 0;
+  background-color: black;
+  width: 100%;
+  height: 100%;
+  z-index: 2;
+  text-align: center;
+  color: white;
+  line-height: 15em;
+  font-size: 2em;
+  animation: fade 2s linear forwards;
+}
+
+@media only screen and (max-width: 725px) {
+  #tile-row {
+    width: 350px;
+    height: 50px;
+    padding: 0 3% 0 4%;
+  }
+
+  .tile {
+    height: 50px;
+    width: 50px;
+    line-height: 1em;
+    box-shadow: 0px 20px 50px #555;
+    transform: rotateX(50deg) scale(0.85);
+    perspective: 800px;
+  }
+  body {
+  }
+  #answer-row {
+    width: 350px;
+    height: 50px;
+  }
+  #answer-row .tile {
+    height: 50px;
+    width: 50px;
+    line-height: 1.5em;
+    font-size: 2em;
+  }
+  #answer-row .tile-value {
+    font-size: 0.4em;
+    text-align: center;
+    padding-left: 0;
+    transform: translateX(0.8em) translateY(1.5em);
+  }
+  .tile-value {
+    display: inline-block;
+    font-size: 0.5em;
+    transform: translateX(0.3em) translateY(0.9em);
+  }
+  footer {
+    top: 50%;
+  }
+  .info {
+    font-size: 1em;
+    line-height: 25em;
+  }
+ footer button{
+    font-size: 0.5em;
+ }
+}
+
+
+    </style>
+
+    <script>
+/*
+ Follow me on @ig_siddhant_khare
+*/
+const tileFrequencies =
+  'AAAAAAAAABBCCDDDDEEEEEEEEEEEEFFGGGHHIIIIIIIIIJKLLLLMMNNNNNNOOOOOOOPPQRRRRRRSSSSSTTTTTTUUUUUVVWWXYYZ';
+let playTiles; //Array of tiles
+const tileValueMap = new Map();
+tileValueMap.set('1', ['A', 'E', 'I', 'O', 'U', 'L', 'N', 'S', 'T', 'R']);
+tileValueMap.set('2', ['D', 'G']);
+tileValueMap.set('3', ['B', 'C', 'M', 'P']);
+tileValueMap.set('4', ['F', 'H', 'V', 'W', 'Y']);
+tileValueMap.set('5', ['K']);
+tileValueMap.set('8', ['J', 'X']);
+tileValueMap.set('10', ['Q', 'Z']);
+
+function getLetterValue(letter) {
+  for (const [key, val] of tileValueMap) {
+    if (val.find(temp => temp === letter)) {
+      return parseInt(key, 10); //10 is radix
+    }
+  }
+}
+
+function displayScoreEffect(points) {
+  console.log('Displaying score effect');
+  let anim = document.getElementById('score-animation');
+  anim.innerText = '';
+  if (!anim.classList.contains('scoredClass')) {
+    anim.classList.add('scoredClass');
+  }
+  //Clone to replay animation
+  let newNode = anim.cloneNode(true);
+  newNode.innerText = `Nice +${points}!`;
+  anim.remove();
+  document.body.append(newNode);
+}
+
+function addToScore(wordValue) {
+  let score = document.getElementById('score');
+  let newScore = parseInt(score.innerText, 10) + wordValue;
+  if(!isNaN(newScore)){
+    score.innerText = newScore;
+    generateTiles();
+  }
+}
+
+function getWordValue() {
+  let score = document.getElementById('score');
+  let answerLetterArr = Array.from(
+    document.getElementById('answer-row').children
+  );
+  let total = 0;
+  let word = '';
+  answerLetterArr.forEach(val => {
+    total += parseInt(val.firstElementChild.innerText, 10);
+    word += val.innerText.charAt(0);
+  });
+
+  let newScore = parseInt(score.innerText, 10) + total;
+  if(!isNaN(newScore)){
+    addToScore(total);
+    displayScoreEffect(total);
+  }
+  return [word, total];
+}
+
+/*Generates random letters for word based on actual scrabble data.
+100 tiles total , more weight to get vowels than consonants 
+7 tiles total
+//Creates markup and attaches
+*/
+function generateTiles() {
+  let temp = '';
+  let id = 0;
+  let tileVal = 0;
+  let markup;
+  let startRow = document.getElementById('tile-row');
+  let answerRow = document.getElementById('answer-row');
+  let letterVal = 0;
+  //Remove anything there
+  while (startRow.firstChild) {
+    startRow.removeChild(startRow.firstChild);
+  }
+  while (answerRow.firstChild) {
+    answerRow.removeChild(answerRow.firstChild);
+  }
+
+  for (let i = 0; i < 7; i++) {
+    temp += tileFrequencies.charAt(
+      Math.floor(Math.random() * tileFrequencies.length)
+    );
+  }
+  playTiles = [...temp];
+  playTiles.forEach(tile => {
+    id++;
+    letterVal = getLetterValue(tile);
+    markup = `<li id="tile-${id}" class="tile" >${tile} <span class="tile-value"> ${letterVal}</span></li>`;
+    startRow.innerHTML += markup;
+  });
+}
+
+function startTimer(time) {
+  let id = setInterval(() => {
+    //Update view every 1s
+    time -= 1;
+    updateTimer(time, id);
+  }, 1000);
+}
+
+/* Updates view of timer
+time remaining passed in in seconds*/
+function updateTimer(time, id) {
+  document.getElementById('timer-num').innerHTML = `${time} `;
+  if (time <= 0) {
+    clearInterval(id);
+  }
+}
+
+function gameLoop() {
+  generateTiles();
+  startTimer(120);
+}
+
+/* When tile clicked play animation that adds it to the answer grid */
+function insertLetter(tile) {
+  let inserted = tile.cloneNode(true);
+  let animation = tile.cloneNode(true);
+  let startRect = findAbsPos(tile);
+  animation.style.position = 'absolute';
+  animation.style.left = startRect[0] + 'px';
+  animation.style.top = startRect[1] + 'px';
+  inserted.classList.toggle('tileHidden');
+  document.getElementById('answer-row').appendChild(inserted);
+  let endRect = findAbsPos(inserted);
+  computeVector(startRect, endRect);
+  tile.classList.toggle('tileHidden');
+  document.body.appendChild(animation);
+
+  animation.classList.add('setTileAnim');
+  /* Wait for the animation to finsh*/
+  setTimeout(() => {
+    inserted.classList.toggle('tileHidden');
+    document.body.removeChild(animation);
+  }, 500);
+}
+
+function removeLetter(tile) {
+  let orignalTile = Array.from(
+    document.getElementById('tile-row').children
+  ).find(elem => elem.id === tile.id);
+  let animation = tile.cloneNode(true);
+  let endRect = findAbsPos(orignalTile);
+  let startRect = findAbsPos(tile);
+  animation.style.position = 'absolute';
+  animation.style.left = startRect[0] + 'px';
+  animation.style.top = startRect[1] + 'px';
+  tile.remove();
+  computeVector(startRect, endRect);
+  animation.classList.add('removeTileAnim');
+  document.body.appendChild(animation);
+  setTimeout(() => {
+    orignalTile.classList.toggle('tileHidden');
+    document.body.removeChild(animation);
+  }, 500);
+}
+
+/* Helper function to compute the distance of the 2D vector needed for 
+the CSS setTile animation
+startCoords- array returned from findAbsPos  
+endCoords - ' '
+*/
+function computeVector(startCoords, endCoords) {
+  let xDist = startCoords[0] - endCoords[0];
+  startCoords[0] > endCoords[0] ? (xDist *= -1) : (xDist *= -1);
+  let yDist = -(startCoords[1] - endCoords[1]); //Always negative ; moves up to answer board
+  document.documentElement.style.setProperty('--tx', `${xDist}px`);
+  document.documentElement.style.setProperty('--ty', `${yDist}px`);
+}
+
+/*Follow me on @ig_siddhant_khare */
+function findAbsPos(obj) {
+  let curleft = (curtop = 0);
+  if (obj.offsetParent) {
+    do {
+      curleft += obj.offsetLeft;
+      curtop += obj.offsetTop;
+    } while ((obj = obj.offsetParent));
+  }
+  return [curleft, curtop];
+}
+
+window.addEventListener('DOMContentLoaded', event => {
+  document.querySelector('#tile-row').addEventListener('click', event => {
+    if (event.target && event.target.classList.contains('tile')) {
+      insertLetter(event.target);
+    }
+  });
+  document.getElementById('refresh').addEventListener('click', event => {
+    generateTiles();
+  });
+  document.getElementById('submit').addEventListener('click', event => {
+    getWordValue();
+  });
+  document.addEventListener('keypress', event => {
+    if (event.keyCode == 13) {
+      getWordValue();
+    }
+  });
+
+  document.querySelector('#answer-row').addEventListener('click', event => {
+    if (event.target && event.target.classList.contains('tile')) {
+      removeLetter(event.target);
+    }
+  });
+  gameLoop();
+});
+
+      </script>
+</html>
